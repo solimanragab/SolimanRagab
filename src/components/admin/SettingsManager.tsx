@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { useData } from '../../context/DataContext';
-import { Download, Upload, RefreshCw, Key, UserCheck, Eye, EyeOff } from 'lucide-react';
+import { Download, Upload, RefreshCw, Key, UserCheck, Eye, EyeOff, Github } from 'lucide-react';
 
 interface SettingsManagerProps {
   showToast: (msg: string) => void;
 }
 
 export default function SettingsManager({ showToast }: SettingsManagerProps) {
-  const { data, updateAdminSettings, resetToDefault, importBackup } = useData();
+  const { data, updateAdminSettings, updateGitSettings, resetToDefault, importBackup } = useData();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Credentials fields
@@ -16,6 +16,28 @@ export default function SettingsManager({ showToast }: SettingsManagerProps) {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
+
+  // Git CMS settings fields
+  const [gitEnabled, setGitEnabled] = useState(data.gitSettings?.enabled || false);
+  const [gitOwner, setGitOwner] = useState(data.gitSettings?.owner || 'solimanragab');
+  const [gitRepo, setGitRepo] = useState(data.gitSettings?.repo || 'SolimanElsenoty');
+  const [gitBranch, setGitBranch] = useState(data.gitSettings?.branch || 'main');
+  const [gitPath, setGitPath] = useState(data.gitSettings?.path || 'src/data/website_data.json');
+  const [gitPat, setGitPat] = useState(() => localStorage.getItem('github_pat') || '');
+  const [showGitPat, setShowGitPat] = useState(false);
+
+  const handleGitSettingsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('github_pat', gitPat.trim());
+    updateGitSettings({
+      enabled: gitEnabled,
+      owner: gitOwner.trim(),
+      repo: gitRepo.trim(),
+      branch: gitBranch.trim(),
+      path: gitPath.trim()
+    });
+    showToast('GitHub Git CMS settings updated successfully!');
+  };
 
   const handleCredentialsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,6 +199,133 @@ export default function SettingsManager({ showToast }: SettingsManagerProps) {
                 className="px-5 py-2.5 bg-accent hover:bg-accent-dark text-cream font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-accent/15"
               >
                 Change Credentials
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* GitHub Integration Card */}
+        <div className="lg:col-span-3 bg-white rounded-3xl border border-dark/5 shadow-sm p-6 sm:p-8 mt-6">
+          <div className="mb-5 border-b border-dark/5 pb-3">
+            <h3 className="text-base sm:text-lg font-bold text-dark font-heading flex items-center gap-2">
+              <Github size={18} className="text-accent" /> GitHub Integration (Git CMS)
+            </h3>
+            <p className="text-xs text-dark/50 mt-1">
+              Configure Git-based persistence. When enabled, saving edits commits changes directly to GitHub, triggering auto-redeploy on Vercel/Netlify.
+            </p>
+          </div>
+
+          <form onSubmit={handleGitSettingsSubmit} className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-cream/15 rounded-xl border border-dark/5">
+              <input
+                type="checkbox"
+                id="gitEnabled"
+                checked={gitEnabled}
+                onChange={(e) => setGitEnabled(e.target.checked)}
+                className="w-4.5 h-4.5 text-accent border-dark/10 rounded focus:ring-accent/30 focus:ring-2 focus:outline-none transition-all"
+              />
+              <div>
+                <label htmlFor="gitEnabled" className="block text-xs font-bold text-dark cursor-pointer select-none">
+                  Enable Git CMS Writes
+                </label>
+                <p className="text-[10px] text-dark/55">
+                  Check this to route content saves to your GitHub repo instead of the local dev server.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-dark/70 mb-1.5">
+                  GitHub Owner / Username
+                </label>
+                <input
+                  type="text"
+                  required={gitEnabled}
+                  value={gitOwner}
+                  onChange={(e) => setGitOwner(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-cream/35 border border-dark/10 rounded-xl text-dark text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent focus:outline-none transition-all"
+                  placeholder="e.g. solimanragab"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-dark/70 mb-1.5">
+                  Repository Name
+                </label>
+                <input
+                  type="text"
+                  required={gitEnabled}
+                  value={gitRepo}
+                  onChange={(e) => setGitRepo(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-cream/35 border border-dark/10 rounded-xl text-dark text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent focus:outline-none transition-all"
+                  placeholder="e.g. SolimanElsenoty"
+                />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-dark/70 mb-1.5">
+                  Branch
+                </label>
+                <input
+                  type="text"
+                  required={gitEnabled}
+                  value={gitBranch}
+                  onChange={(e) => setGitBranch(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-cream/35 border border-dark/10 rounded-xl text-dark text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent focus:outline-none transition-all"
+                  placeholder="e.g. main"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-dark/70 mb-1.5">
+                  JSON Data Path
+                </label>
+                <input
+                  type="text"
+                  required={gitEnabled}
+                  value={gitPath}
+                  onChange={(e) => setGitPath(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-cream/35 border border-dark/10 rounded-xl text-dark text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent focus:outline-none transition-all"
+                  placeholder="src/data/website_data.json"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-dark/70 mb-1.5">
+                GitHub Personal Access Token (PAT)
+              </label>
+              <div className="relative">
+                <input
+                  type={showGitPat ? 'text' : 'password'}
+                  required={gitEnabled}
+                  value={gitPat}
+                  onChange={(e) => setGitPat(e.target.value)}
+                  className="w-full pl-4 pr-10 py-2.5 bg-cream/35 border border-dark/10 rounded-xl text-dark text-sm focus:ring-2 focus:ring-accent/30 focus:border-accent focus:outline-none transition-all"
+                  placeholder="github_pat_..."
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowGitPat(!showGitPat)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-dark/30 hover:text-dark transition-colors"
+                >
+                  {showGitPat ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              <p className="text-[10px] text-dark/45 mt-1 font-semibold">
+                Token is saved only in this browser's local storage for security. Generate one on GitHub with <code>repo</code> write scope.
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-accent hover:bg-accent-dark text-cream font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-accent/15"
+              >
+                Save Git CMS Settings
               </button>
             </div>
           </form>

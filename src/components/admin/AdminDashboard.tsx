@@ -33,7 +33,7 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const { data } = useData();
+  const { data, isSaving, gitError } = useData();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -95,6 +95,22 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         <div className="fixed bottom-5 right-5 z-[200] bg-dark-800 text-cream px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border border-accent/20 animate-fade-in text-sm font-semibold select-none">
           <CheckCircle2 size={18} className="text-accent" />
           <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Saving State Overlay */}
+      {isSaving && (
+        <div className="fixed bottom-5 right-5 z-[200] bg-dark-800 text-cream px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border border-accent/20 animate-fade-in text-sm font-semibold select-none">
+          <span className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+          <span>Saving to codebase...</span>
+        </div>
+      )}
+
+      {/* Git Save Error Toast */}
+      {gitError && (
+        <div className="fixed bottom-5 right-5 z-[200] bg-red-900/90 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border border-red-500 animate-fade-in text-sm font-semibold select-none max-w-sm">
+          <span className="flex-shrink-0 w-2 h-2 bg-red-500 rounded-full animate-ping" />
+          <span>Save Error: {gitError}</span>
         </div>
       )}
 
